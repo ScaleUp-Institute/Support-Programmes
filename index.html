@@ -404,53 +404,56 @@ tr:nth-child(even) td{background:#f8fafc}
 </section>
 
 <script>
-  (function(){
-    function ready(fn){
-      if (document.readyState !== 'loading') fn();
-      else document.addEventListener('DOMContentLoaded', fn);
+(function(){
+  function ready(fn){ document.readyState!=="loading" ? fn() : document.addEventListener("DOMContentLoaded", fn); }
+
+  ready(function(){
+    const btns   = Array.from(document.querySelectorAll(".tab-btn"));
+    const panels = Array.from(document.querySelectorAll(".tab-panel"));
+    const tabIds = panels.map(p => p.id);
+    const THEMED_ID   = "tab-themed";
+    const ENDORSED_ID = "tab-endorsed";
+
+    function activate(id){
+      btns.forEach(b => b.classList.toggle("active", b.dataset.tab === id));
+      panels.forEach(p => p.classList.toggle("active", p.id === id));
     }
 
-    ready(function(){
-      const btns   = Array.from(document.querySelectorAll('.tab-btn'));
-      const panels = Array.from(document.querySelectorAll('.tab-panel'));
+    // 1) Normal tab clicks
+    btns.forEach(b => b.addEventListener("click", () => activate(b.dataset.tab)));
 
-      function activate(id, {push=false} = {}){
-        // Toggle classes
-        btns.forEach(b => b.classList.toggle('active', b.dataset.tab === id));
-        panels.forEach(p => p.classList.toggle('active', p.id === id));
-
-        // Update URL (so you can share the state)
-        const url = new URL(window.location.href);
-        url.searchParams.set('tab', id.replace(/^tab-/, '')); // e.g. tab-endorsed → endorsed
-        url.hash = id;                                        // also set hash for robustness
-        if (push) history.pushState({tab:id}, '', url);
-        else history.replaceState({tab:id}, '', url);
+    // 2) Deep links for tabs ONLY (won't hijack region hashes)
+    //    Accepted: ?tab=endorsed | ?tab=themed | #view=endorsed | #view=themed
+    (function handleDeepLink(){
+      const params = new URLSearchParams(location.search);
+      const q = (params.get("tab") || "").toLowerCase();
+      if (q === "endorsed") activate(ENDORSED_ID);
+      else if (q === "themed") activate(THEMED_ID);
+      else {
+        const h = (location.hash || "").toLowerCase();
+        if (h === "#view=endorsed") activate(ENDORSED_ID);
+        if (h === "#view=themed")   activate(THEMED_ID);
       }
+    })();
 
-      // Click handlers
-      btns.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab, {push:true})));
-
-      // Initial state from ?tab=… or #tab-…
-      const paramsTab = new URLSearchParams(location.search).get('tab'); // e.g. "endorsed"
-      const hashTab   = (location.hash || '').replace(/^#/, '');         // e.g. "tab-endorsed"
-      let startId     = 'tab-themed';
-
-      if (hashTab && panels.some(p => p.id === hashTab)) {
-        startId = hashTab;
-      } else if (paramsTab) {
-        const candidate = 'tab-' + paramsTab.toLowerCase();
-        if (panels.some(p => p.id === candidate)) startId = candidate;
-      }
-
-      activate(startId); // set initial tab
-
-      // Handle back/forward navigation
-      window.addEventListener('popstate', (ev) => {
-        const id = ev.state && ev.state.tab ? ev.state.tab : startId;
-        activate(id);
+    // 3) “Jump to:” region links: always switch to THEMED tab, then scroll
+    //    Targets are standard #region-id anchors (e.g. #west-midlands)
+    document.querySelectorAll('.toc a[href^="#"]').forEach(a => {
+      a.addEventListener("click", function(e){
+        const targetId = this.getAttribute("href").slice(1);
+        const targetEl = document.getElementById(targetId);
+        if (!targetEl) return; // let default happen if not found
+        e.preventDefault();
+        // show themed tab first
+        activate(THEMED_ID);
+        // update hash without jumping, then smooth scroll
+        history.pushState(null, "", "#" + targetId);
+        // allow layout to settle after tab switch
+        setTimeout(() => targetEl.scrollIntoView({behavior: "smooth", block: "start"}), 10);
       });
     });
-  })();
+  });
+})();
 </script>
 
 <style>
@@ -489,6 +492,11 @@ tr:nth-child(even) td{background:#f8fafc}
   }
 </style>
 
+<style>
+  /* ensure anchor scrolling isn't hidden under sticky header */
+  section.region { scroll-margin-top: 80px; }
+  html { scroll-behavior: smooth; }
+</style>
 
 <script>
 (function () {
