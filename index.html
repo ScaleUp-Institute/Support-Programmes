@@ -585,4 +585,54 @@ tr:nth-child(even) td{background:#f8fafc}
 })();
 </script>
 
+<script>
+/* Remove specific programmes from "One to watch" tables only */
+document.addEventListener('DOMContentLoaded', function () {
+  const REMOVE = new Set(['Angels@Essex']);   // add more names if needed
+
+  // Helper: remove matching rows in a table; if table empties, show a placeholder row
+  function scrubTable(tbl) {
+    const rows = Array.from(tbl.querySelectorAll('tbody tr'));
+    let removed = 0;
+    rows.forEach(tr => {
+      const firstCell = tr.querySelector('td');
+      if (!firstCell) return;
+      const name = (firstCell.textContent || '').trim();
+      if (REMOVE.has(name)) {
+        tr.remove();
+        removed++;
+      }
+    });
+    if (removed > 0) {
+      const remaining = tbl.querySelectorAll('tbody tr').length;
+      if (remaining === 0) {
+        tbl.querySelector('tbody').innerHTML =
+          '<tr><td colspan="6" style="color:#6b7280;font-style:italic">No programmes listed.</td></tr>';
+      }
+    }
+  }
+
+  // Find all “One to watch” sections inside the Endorsed tab
+  // Titles we generated: "National — One to watch" and "Regional — One to watch"
+  const endorsedTab = document.getElementById('tab-endorsed');
+  if (!endorsedTab) return;
+
+  endorsedTab.querySelectorAll('h3').forEach(h3 => {
+    if (!/one\s*to\s*watch/i.test(h3.textContent || '')) return;
+
+    // For the national section: the next sibling is the table
+    // For the regional section: the following siblings are .region-box blocks each with a table
+    let el = h3.nextElementSibling;
+    while (el && el.tagName && el.tagName.toLowerCase() !== 'h3') {
+      if (el.tagName.toLowerCase() === 'table') {
+        scrubTable(el);
+      } else {
+        el.querySelectorAll('table').forEach(scrubTable);
+      }
+      el = el.nextElementSibling;
+    }
+  });
+});
+</script>
+
 </body></html>
