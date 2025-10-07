@@ -45,7 +45,7 @@ tr:nth-child(even) td{background:#f8fafc}
   <div class="radials-grid">
     <!-- 1 row -->
     <div class="radial-card">
-      <a href="assets/radials/east_midlands.png" target="_blank" rel="noopener">
+      <a href="east_midlands.png" target="_blank" rel="noopener">
         <figure><img src="east_midlands.png" alt="East Midlands radial chart" loading="lazy"></figure>
         <div class="cap">East Midlands</div>
       </a>
@@ -536,18 +536,26 @@ tr:nth-child(even) td{background:#f8fafc}
 
 <script>
 (function () {
+  // Always relative so it works on GitHub Pages repos and subpaths
   const IMG_BASE = "assets/radials/";
 
+  // Map heading text → file basename (null = skip)
   const OVERRIDES = {
-    "south east (incl. london)": "south_east_incl_london",
-    "south east incl. london":    "south_east_incl_london",
-    "yorkshire & the humber":     "yorkshire_and_the_humber",
-    "yorkshire and the humber":   "yorkshire_and_the_humber",
-    "south yorkshire":            "south_yorkshire"
+    "south east":                    "south_east_incl_london",
+    "south east incl. london":       "south_east_incl_london",
+    "south east (incl. london)":     "south_east_incl_london",
+    "yorkshire & the humber":        "yorkshire_and_the_humber",
+    "yorkshire and the humber":      "yorkshire_and_the_humber",
+    "south yorkshire":               "south_yorkshire",
+    // skip national
+    "uk":                            null,
+    "uk-wide":                       null,
+    "uk wide":                       null,
+    "national":                      null
   };
 
   function cleanHeading(txt){
-    // remove emoji/symbols, keep letters/numbers/space/&/dash/colon
+    // strip emoji/symbols, keep letters/numbers/space/&/dash/colon
     let s = (txt || "").replace(/[^\p{L}\p{N}&:\- ]+/gu, " ").replace(/\s+/g," ").trim();
     // take left of em dash or colon if present
     s = s.split("—")[0].split(":")[0].trim();
@@ -556,7 +564,7 @@ tr:nth-child(even) td{background:#f8fafc}
 
   function slugToBase(regionName){
     const key = regionName.trim().toLowerCase();
-    if (OVERRIDES[key]) return OVERRIDES[key];
+    if (key in OVERRIDES) return OVERRIDES[key]; // may be null to skip
     return key
       .replace(/&/g,"and")
       .replace(/[^a-z0-9 ]+/g," ")
@@ -572,6 +580,8 @@ tr:nth-child(even) td{background:#f8fafc}
 
     const regionRaw = cleanHeading(h2.textContent || "");
     const base = slugToBase(regionRaw);
+    if (!base) return; // e.g. UK-wide
+
     const src  = IMG_BASE + base + ".png";
 
     const fig = document.createElement("div");
@@ -583,7 +593,6 @@ tr:nth-child(even) td{background:#f8fafc}
       </a>
       <small>Click to open full-resolution image</small>
     `;
-    // simple & robust: always insert right after the <h2>
     h2.insertAdjacentElement("afterend", fig);
   }
 
@@ -593,13 +602,16 @@ tr:nth-child(even) td{background:#f8fafc}
   }
 
   ready(function(){
-    // Only add to the By Theme tab’s regions
+    // Only insert into the By Theme tab’s region sections
     document.querySelectorAll("#tab-themed section.region").forEach(addRadial);
 
-    // (Optional) fix any thumbnails that still use absolute "/assets/..."
+    // If you ever use thumbnails with data-radial, wire them here
     document.querySelectorAll('img[data-radial]').forEach(img => {
       const base = img.getAttribute('data-radial');
-      if (base) img.src = IMG_BASE + base + ".png";
+      if (base) {
+        img.src = IMG_BASE + base + ".png";
+        img.removeAttribute('data-radial');
+      }
     });
   });
 })();
