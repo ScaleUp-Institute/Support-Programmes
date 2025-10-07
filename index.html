@@ -498,6 +498,56 @@ tr:nth-child(even) td{background:#f8fafc}
   html { scroll-behavior: smooth; }
 </style>
 
+<style>
+  /* Fade/slide in when the image enters the viewport */
+  .radial img,
+  .radials-grid img {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .45s ease, transform .45s ease;
+  }
+  .radial img.is-visible,
+  .radials-grid img.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Magnifier lens container */
+  .magnify-wrap {
+    position: relative;
+    overflow: hidden;            /* keep the lens within bounds */
+    display: inline-block;
+    max-width: 100%;
+  }
+  .magnify-lens {
+    position: absolute;
+    pointer-events: none;        /* don’t steal the mouse */
+    width: 140px;                /* lens diameter */
+    height: 140px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,.12);
+    box-shadow: 0 8px 16px rgba(0,0,0,.18);
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: 200% 200%;  /* 2× zoom by default */
+    transform: translate(-70px, -70px); /* center on cursor */
+    opacity: 0;
+    transition: opacity .15s ease;
+  }
+  .magnify-wrap.is-hovering .magnify-lens {
+    opacity: 1;
+  }
+
+  /* Smaller lens on narrow screens */
+  @media (max-width: 700px) {
+    .magnify-lens {
+      width: 110px; height: 110px;
+      transform: translate(-55px, -55px);
+      background-size: 240% 240%; /* a touch more zoom on small screens */
+    }
+  }
+</style>
+
 <script>
 (function () {
   // Your PNGs are in the repo root, so keep this empty.
@@ -633,6 +683,123 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 });
+</script>
+
+<script>
+(function () {
+  // Which images get the enhancements?
+  // - The grid images (already in DOM)
+  // - The per-region radials (injected by your script: section.region .radial img)
+  function allRadialImages() {
+    return Array.from(document.querySelectorAll(
+      '.radials-grid img, section.region .radial img'
+    ));
+  }
+
+  // 2a) Fade/slide-in when visible
+  function setupRevealOnView(imgs) {
+    if (!('IntersectionObserver' in window)) {
+      imgs.forEach(img => img.classList.add('is-visible'));
+      return;
+    }
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { rootMargin: '80px 0px' });
+    imgs.forEach(img => io.observe(img));
+  }
+
+  // 2b) Magnifier lens (non-destructive, keeps pixels intact)
+  function setupMagnifier(img) {
+    // Wrap <img> so we can place a lens on top without affecting layout
+    const wrap = document.createElement('span');
+    wrap.className = 'magnify-wrap';
+    const parent = img.parentNode;
+    parent.insertBefore(wrap, img);
+    wrap.appendChild(img);
+
+    const lens = document.createElement('span');
+    lens.className = 'magnify-lens';
+    wrap.appendChild(lens);
+
+    // Use the same image as lens background (pixel-identical)
+    // Resolve to absolute URL so background works regardless of base
+    const tmp = document.createElement('a');
+    tmp.href = img.currentSrc || img.src;  // currentSrc handles srcset if ever used
+    lens.style.backgroundImage = `url("${tmp.href}")`;
+
+    function updateLens(e) {
+      const r = wrap.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+
+      // Keep lens inside the container
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+      const cx = clamp(x, 0, r.width);
+      const cy = clamp(y, 0, r.height);
+
+      // Move the lens (it’s centered using translate in CSS)
+      lens.style.left = cx + 'px';
+      lens.style.top  = cy + 'px';
+
+      // Background sizing/position: map cursor to the same point on the image
+      // Background-size is set to 200% in CSS; compute the offset accordingly.
+      const bgX = (cx / r.width)  * 100;
+      const bgY = (cy / r.height) * 100;
+      lens.style.backgroundPosition = bgX + '% ' + bgY + '%';
+    }
+
+    function enter() { wrap.classList.add('is-hovering'); }
+    function leave() { wrap.classList.remove('is-hovering'); }
+
+    // Desktop hover
+    wrap.addEventListener('mousemove', updateLens);
+    wrap.addEventListener('mouseenter', enter);
+    wrap.addEventListener('mouseleave', leave);
+
+    // Touch: tap to toggle, drag to move
+    let touchOn = false;
+    wrap.addEventListener('touchstart', (ev) => {
+      touchOn = !touchOn;
+      if (touchOn) enter(); else leave();
+      if (ev.touches && ev.touches[0]) {
+        const t = ev.touches[0];
+        updateLens({ clientX: t.clientX, clientY: t.clientY });
+      }
+      ev.preventDefault();
+    }, { passive: false });
+    wrap.addEventListener('touchmove', (ev) => {
+      if (!touchOn) return;
+      const t = ev.touches && ev.touches[0];
+      if (t) updateLens({ clientX: t.clientX, clientY: t.clientY });
+      ev.preventDefault();
+    }, { passive: false });
+    wrap.addEventListener('touchend', () => { /* keep lens on until next tap */ });
+  }
+
+  function enhanceAll() {
+    const imgs = allRadialImages();
+    // Skip if we already enhanced (e.g., after tab switch reinsertion)
+    const fresh = imgs.filter(img => !img.dataset.enhancedRadial);
+    fresh.forEach(img => { img.dataset.enhancedRadial = '1'; });
+
+    setupRevealOnView(fresh);
+    fresh.forEach(setupMagnifier);
+  }
+
+  // Run now…
+  if (document.readyState !== 'loading') enhanceAll();
+  else document.addEventListener('DOMContentLoaded', enhanceAll);
+
+  // …and run again after your per-region images are injected
+  // Your existing script adds region radials on DOMContentLoaded; to be safe,
+  // re-run enhancement shortly after load to catch late inserts.
+  window.addEventListener('load', () => setTimeout(enhanceAll, 200));
+})();
 </script>
 
 </body></html>
