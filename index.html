@@ -510,4 +510,105 @@ tr:nth-child(even) td{background:#f8fafc}
   })();
 </script>
 
+<style>
+  /* compact, readable image block inside each region card */
+  .region .radial {
+    margin: 10px 0 16px;
+    background:#f8fafc;
+    border:1px solid #e2e6ee;
+    border-radius:8px;
+    padding:10px;
+    text-align:center;
+  }
+  .region .radial img{
+    max-width:100%;
+    height:auto;
+    display:block;
+    margin:0 auto;
+  }
+  .region .radial small{
+    display:block;
+    color:#64748b;
+    margin-top:6px;
+    font-size:11px;
+  }
+</style>
+
+<script>
+(function () {
+  // 👇 Use a *relative* path (no leading slash) so it works on GitHub Pages subpaths
+  const IMG_BASE = "assets/radials/";
+
+  // Any special filename overrides go here
+  const OVERRIDES = {
+    "south east (incl. london)": "south_east_incl_london",
+    "south east incl. london":    "south_east_incl_london",
+    "yorkshire & the humber":     "yorkshire_and_the_humber",
+    "yorkshire and the humber":   "yorkshire_and_the_humber",
+    "south yorkshire":            "south_yorkshire"
+    // add more overrides if you ever add new special cases
+  };
+
+  function slugToPngBase(regionName){
+    const key = regionName.trim().toLowerCase();
+    if (OVERRIDES[key]) return OVERRIDES[key];
+    // default slug: lower → replace & with and → strip punctuation → spaces→underscores
+    let s = key.replace(/&/g,"and")
+               .replace(/[^a-z0-9 ]+/g," ")
+               .replace(/\s+/g," ")
+               .trim()
+               .replace(/\s/g,"_");
+    return s; // e.g. "west_midlands" → assets/radials/west_midlands.png
+  }
+
+  function addRadialToRegion(section){
+    if (section.querySelector(".radial")) return; // already added
+
+    // Get the region label from the <h2> (text before the em dash)
+    const h2 = section.querySelector("h2");
+    if (!h2) return;
+    const full = h2.textContent || "";
+    const region = (full.split("—")[0] || full).trim(); // left side of “—”
+    const base   = slugToPngBase(region);
+    const src    = IMG_BASE + base + ".png";
+
+    // Build the figure (link opens full-res PNG)
+    const fig = document.createElement("div");
+    fig.className = "radial";
+    fig.innerHTML = `
+      <a href="${src}" target="_blank" rel="noopener">
+        <img src="${src}" alt="${region} radial chart"
+             onerror="this.closest('.radial').remove()" />
+      </a>
+      <small>Click to open full-resolution image</small>
+    `;
+
+    // Insert the figure just under the intro note (if present), otherwise after the title
+    const note = section.querySelector(".note");
+    if (note && note.parentNode === section) {
+      note.insertAdjacentElement("afterend", fig);
+    } else {
+      h2.insertAdjacentElement("afterend", fig);
+    }
+  }
+
+  function ready(fn){
+    if (document.readyState !== "loading") fn();
+    else document.addEventListener("DOMContentLoaded", fn);
+  }
+
+  ready(function(){
+    // Add a radial image to each region block
+    document.querySelectorAll("section.region").forEach(addRadialToRegion);
+
+    // (Optional) also fix any gallery thumbnails that used absolute "/assets/..." paths
+    document.querySelectorAll('img[data-radial]').forEach(img => {
+      const base = img.getAttribute('data-radial'); // e.g. "west_midlands"
+      img.src = IMG_BASE + base + ".png";
+    });
+  });
+})();
+</script>
+
+
 </body></html>
