@@ -43,7 +43,6 @@ tr:nth-child(even) td{background:#f8fafc}
 </div></header>
 <section class="region" id="east-midlands">
 <h2>East Midlands — Programmes grouped by theme</h2>
-<p class="sub">Duplicate entries are intentional where a programme spans multiple themes.</p>
 <div class="grid">
 <div class="card">
 <div class="title">Access to talent and skills</div>
@@ -341,7 +340,6 @@ tr:nth-child(even) td{background:#f8fafc}
 
 <section id="tab-endorsed" class="tab-panel">
   <h2>Endorsed &amp; One-to-watch — National vs Regional</h2>
-  <p class="sub">Website link is in the last column. “National” includes UK/UK-wide/National-labelled entries.</p>
   
     <div class="split">
       <div>
@@ -408,36 +406,69 @@ tr:nth-child(even) td{background:#f8fafc}
 <script>
   (function(){
     function ready(fn){
-      if(document.readyState !== 'loading'){ fn(); }
-      else { document.addEventListener('DOMContentLoaded', fn); }
+      if (document.readyState !== 'loading') fn();
+      else document.addEventListener('DOMContentLoaded', fn);
     }
+
     ready(function(){
-      const btns = Array.from(document.querySelectorAll('.tab-btn'));
+      const btns   = Array.from(document.querySelectorAll('.tab-btn'));
       const panels = Array.from(document.querySelectorAll('.tab-panel'));
-      function activate(id){
+
+      function activate(id, {push=false} = {}){
+        // Toggle classes
         btns.forEach(b => b.classList.toggle('active', b.dataset.tab === id));
         panels.forEach(p => p.classList.toggle('active', p.id === id));
+
+        // Update URL (so you can share the state)
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', id.replace(/^tab-/, '')); // e.g. tab-endorsed → endorsed
+        url.hash = id;                                        // also set hash for robustness
+        if (push) history.pushState({tab:id}, '', url);
+        else history.replaceState({tab:id}, '', url);
       }
-      btns.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
+
+      // Click handlers
+      btns.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab, {push:true})));
+
+      // Initial state from ?tab=… or #tab-…
+      const paramsTab = new URLSearchParams(location.search).get('tab'); // e.g. "endorsed"
+      const hashTab   = (location.hash || '').replace(/^#/, '');         // e.g. "tab-endorsed"
+      let startId     = 'tab-themed';
+
+      if (hashTab && panels.some(p => p.id === hashTab)) {
+        startId = hashTab;
+      } else if (paramsTab) {
+        const candidate = 'tab-' + paramsTab.toLowerCase();
+        if (panels.some(p => p.id === candidate)) startId = candidate;
+      }
+
+      activate(startId); // set initial tab
+
+      // Handle back/forward navigation
+      window.addEventListener('popstate', (ev) => {
+        const id = ev.state && ev.state.tab ? ev.state.tab : startId;
+        activate(id);
+      });
     });
   })();
 </script>
 
 <style>
-  /* compact image block inside each region */
-  .region .radial {
-    margin: 10px 0 16px;
+  /* Radial image size inside each region section */
+  .region .radial{
+    margin: 10px auto 16px;         /* center & give breathing room */
     background:#f8fafc;
     border:1px solid #e2e6ee;
     border-radius:8px;
     padding:10px;
     text-align:center;
+    max-width: 780px;                /* <-- cap overall block width */
+    width: min(92vw, 780px);         /* responsive: never wider than 780px */
   }
   .region .radial img{
-    max-width:100%;
-    height:auto;
     display:block;
-    margin:0 auto;
+    width: 100%;                     /* scale image to the capped block */
+    height:auto;
   }
   .region .radial small{
     display:block;
@@ -445,7 +476,19 @@ tr:nth-child(even) td{background:#f8fafc}
     margin-top:6px;
     font-size:11px;
   }
+
+  /* (Optional) make the top gallery thumbs smaller & consistent */
+  .radials-grid .radial-card figure{
+    max-width: 280px;                /* smaller thumbnails */
+    margin: 0 auto;
+  }
+  .radials-grid .radial-card img{
+    width:100%;
+    height:auto;
+    display:block;
+  }
 </style>
+
 
 <script>
 (function () {
