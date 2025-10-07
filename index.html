@@ -38,93 +38,6 @@ tr:nth-child(even) td{background:#f8fafc}
 
 <section id="tab-themed" class="tab-panel active">
 
-<section id="radials" class="radials">
-  <h2>Radial charts — regional programme snapshots</h2>
-  <p class="sub">Click any chart to view at full resolution. Images are rendered directly from the original Matplotlib code.</p>
-
-  <div class="radials-grid">
-    <!-- 1 row -->
-    <div class="radial-card">
-      <a href="east_midlands.png" target="_blank" rel="noopener">
-        <figure><img src="east_midlands.png" alt="East Midlands radial chart" loading="lazy"></figure>
-        <div class="cap">East Midlands</div>
-      </a>
-    </div>
-    <div class="radial-card">
-      <a href="east_of_england.png" target="_blank" rel="noopener">
-        <figure><img src="east_of_england.png" alt="East of England radial chart" loading="lazy"></figure>
-        <div class="cap">East of England</div>
-      </a>
-    </div>
-    <div class="radial-card">
-      <a href="north_east.png" target="_blank" rel="noopener">
-        <figure><img src="north_east.png" alt="North East radial chart" loading="lazy"></figure>
-        <div class="cap">North East</div>
-      </a>
-    </div>
-
-    <!-- 2 row -->
-    <div class="radial-card">
-      <a href="north_west.png" target="_blank" rel="noopener">
-        <figure><img src="north_west.png" alt="North West radial chart" loading="lazy"></figure>
-        <div class="cap">North West</div>
-      </a>
-    </div>
-    <div class="radial-card">
-      <a href="northern_ireland.png" target="_blank" rel="noopener">
-        <figure><img src="northern_ireland.png" alt="Northern Ireland radial chart" loading="lazy"></figure>
-        <div class="cap">Northern Ireland</div>
-      </a>
-    </div>
-    <div class="radial-card">
-      <a href="scotland.png" target="_blank" rel="noopener">
-        <figure><img src="scotland.png" alt="Scotland radial chart" loading="lazy"></figure>
-        <div class="cap">Scotland</div>
-      </a>
-    </div>
-
-    <!-- 3 row -->
-    <div class="radial-card">
-      <a href="south_east_incl._london.png" target="_blank" rel="noopener">
-        <figure><img src="south_east_incl._london.png" alt="South East (incl. London) radial chart" loading="lazy"></figure>
-        <div class="cap">South East (incl. London)</div>
-      </a>
-    </div>
-    <div class="radial-card">
-      <a href="south_west.png" target="_blank" rel="noopener">
-        <figure><img src="south_west.png" alt="South West radial chart" loading="lazy"></figure>
-        <div class="cap">South West</div>
-      </a>
-    </div>
-    <div class="radial-card">
-      <a href="south_yorkshire.png" target="_blank" rel="noopener">
-        <figure><img src="south_yorkshire.png" alt="South Yorkshire radial chart" loading="lazy"></figure>
-        <div class="cap">South Yorkshire</div>
-      </a>
-    </div>
-
-    <!-- 4 row -->
-    <div class="radial-card">
-      <a href="wales.png" target="_blank" rel="noopener">
-        <figure><img src="wales.png" alt="Wales radial chart" loading="lazy"></figure>
-        <div class="cap">Wales</div>
-      </a>
-    </div>
-    <div class="radial-card">
-      <a href="west_midlands.png" target="_blank" rel="noopener">
-        <figure><img src="west_midlands.png" alt="West Midlands radial chart" loading="lazy"></figure>
-        <div class="cap">West Midlands</div>
-      </a>
-    </div>
-    <div class="radial-card">
-      <a href="yorkshire_and_the_humber.png" target="_blank" rel="noopener">
-        <figure><img src="yorkshire_and_the_humber.png" alt="Yorkshire and the Humber radial chart" loading="lazy"></figure>
-        <div class="cap">Yorkshire and the Humber</div>
-      </a>
-    </div>
-  </div>
-</section>
-
 <header><div class='toc'><strong style='margin-right:6px;color:#2c3e50'>Jump to:</strong>
 <a href='#east-midlands'>East Midlands</a> <a href='#east-of-england'>East of England</a> <a href='#north-east'>North East</a> <a href='#north-west'>North West</a> <a href='#northern-ireland'>Northern Ireland</a> <a href='#scotland'>Scotland</a> <a href='#south-east'>South East</a> <a href='#south-east-incl-london-'>South East (incl. London)</a> <a href='#south-west'>South West</a> <a href='#uk-wide'>UK-wide</a> <a href='#wales'>Wales</a> <a href='#west-midlands'>West Midlands</a> <a href='#yorkshire-and-the-humber'>Yorkshire and the Humber</a>
 </div></header>
@@ -511,7 +424,7 @@ tr:nth-child(even) td{background:#f8fafc}
 </script>
 
 <style>
-  /* compact, readable image block inside each region card */
+  /* compact image block inside each region */
   .region .radial {
     margin: 10px 0 16px;
     background:#f8fafc;
@@ -536,11 +449,10 @@ tr:nth-child(even) td{background:#f8fafc}
 
 <script>
 (function () {
-  // Files live in the repo root, so no folder prefix.
-  const IMG_BASE = ""; // e.g. "east_midlands.png"
+  // Your PNGs are in the repo root, so keep this empty.
+  const IMG_BASE = ""; // e.g. "west_midlands.png"
 
-  // Exact map from the region heading (left of "—") to PNG basename.
-  // Skip UK/UK-wide by mapping to null.
+  // Map headings/IDs to exact filename bases (no path, no .png)
   const FILE_FOR = {
     "east midlands": "east_midlands",
     "east of england": "east_of_england",
@@ -548,60 +460,77 @@ tr:nth-child(even) td{background:#f8fafc}
     "north west": "north_west",
     "northern ireland": "northern_ireland",
     "scotland": "scotland",
-    "south east": "south_east_incl_london",        // <- your combined chart
     "south east (incl. london)": "south_east_incl_london",
-    "south east incl. london": "south_east_incl_london",
     "south west": "south_west",
     "south yorkshire": "south_yorkshire",
     "wales": "wales",
     "west midlands": "west_midlands",
-    "yorkshire and the humber": "yorkshire_and_the_humber",
-    "yorkshire & the humber": "yorkshire_and_the_humber",
-    // national – intentionally no images inside region sections
-    "uk": null, "uk-wide": null, "uk wide": null, "national": null
+    "yorkshire and the humber": "yorkshire_and_the_humber"
   };
 
-  function cleanHeading(txt){
-    // remove emoji/symbols, keep letters/numbers/&/space/dash/colon
-    let s = (txt || "").replace(/[^\p{L}\p{N}&:\- ]+/gu, " ").replace(/\s+/g," ").trim();
-    // take left side of em-dash or colon
-    s = s.split("—")[0].split(":")[0].trim();
-    return s;
+  // Fallback: derive from section id (e.g. "west-midlands" -> "west_midlands")
+  function idToFileBase(id){
+    return (id || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\- ]+/g,"")
+      .replace(/-/g,"_")
+      .replace(/\s+/g,"_")
+      .trim();
   }
 
-  function injectOne(section){
-    if (section.querySelector(".radial")) return; // already added
+  // Prefer H2 text (left of long dash), then FILE_FOR, then ID fallback
+  function fileBaseForSection(section){
     const h2 = section.querySelector("h2");
-    if (!h2) return;
+    if (h2){
+      const full = (h2.textContent || "").trim();
+      const left = (full.split("—")[0] || full).trim().toLowerCase();
+      if (FILE_FOR[left]) return FILE_FOR[left];
+    }
+    const id = section.getAttribute("id") || "";
+    // ID like "west-midlands" should map to "west_midlands" if the map misses
+    const fromId = idToFileBase(id);
+    return FILE_FOR[id.toLowerCase()] || fromId;
+  }
 
-    const regionLabel = cleanHeading(h2.textContent).toLowerCase();
-    const base = FILE_FOR.hasOwnProperty(regionLabel) ? FILE_FOR[regionLabel] : null;
-    if (!base) return; // skip UK/unknowns
+  function insertRadial(section){
+    if (section.querySelector(".radial")) return; // already present
 
+    const base = fileBaseForSection(section);
+    if (!base) return;
     const src = IMG_BASE + base + ".png";
+
+    // build the figure
     const fig = document.createElement("div");
     fig.className = "radial";
     fig.innerHTML = `
       <a href="${src}" target="_blank" rel="noopener">
-        <img src="${src}" alt="${regionLabel} radial chart"
-             loading="lazy"
-             onerror="this.closest('.radial').remove()"/>
+        <img src="${src}" alt="Radial chart — ${base}" loading="lazy"
+             onerror="this.closest('.radial').remove()">
       </a>
       <small>Click to open full-resolution image</small>
     `;
-    // place right under the region title (or under the note if you prefer)
-    h2.insertAdjacentElement("afterend", fig);
+
+    // place it right after the region subtitle if present, else after the H2
+    const sub = section.querySelector(".sub");
+    const h2  = section.querySelector("h2");
+    if (sub && sub.parentNode === section){
+      sub.insertAdjacentElement("afterend", fig);
+    } else if (h2){
+      h2.insertAdjacentElement("afterend", fig);
+    } else {
+      section.insertAdjacentElement("afterbegin", fig);
+    }
   }
 
-  function run(){
-    // Only add inside the “By Theme (Regions)” tab
-    const container = document.querySelector("#tab-themed");
-    if (!container) return;
-    container.querySelectorAll("section.region").forEach(injectOne);
+  function ready(fn){
+    if (document.readyState !== "loading") fn();
+    else document.addEventListener("DOMContentLoaded", fn);
   }
 
-  if (document.readyState !== "loading") run();
-  else document.addEventListener("DOMContentLoaded", run);
+  ready(function(){
+    // Only inject inside the per-region blocks (tab “By Theme” content)
+    document.querySelectorAll("section.region").forEach(insertRadial);
+  });
 })();
 </script>
 
