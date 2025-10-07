@@ -85,8 +85,8 @@ tr:nth-child(even) td{background:#f8fafc}
 
     <!-- 3 row -->
     <div class="radial-card">
-      <a href="south_east_incl_london.png" target="_blank" rel="noopener">
-        <figure><img src="south_east_incl_london.png" alt="South East (incl. London) radial chart" loading="lazy"></figure>
+      <a href="south_east_incl._london.png" target="_blank" rel="noopener">
+        <figure><img src="south_east_incl._london.png" alt="South East (incl. London) radial chart" loading="lazy"></figure>
         <div class="cap">South East (incl. London)</div>
       </a>
     </div>
@@ -536,84 +536,72 @@ tr:nth-child(even) td{background:#f8fafc}
 
 <script>
 (function () {
-  // Always relative so it works on GitHub Pages repos and subpaths
-  const IMG_BASE = "assets/radials/";
+  // Files live in the repo root, so no folder prefix.
+  const IMG_BASE = ""; // e.g. "east_midlands.png"
 
-  // Map heading text → file basename (null = skip)
-  const OVERRIDES = {
-    "south east":                    "south_east_incl_london",
-    "south east incl. london":       "south_east_incl_london",
-    "south east (incl. london)":     "south_east_incl_london",
-    "yorkshire & the humber":        "yorkshire_and_the_humber",
-    "yorkshire and the humber":      "yorkshire_and_the_humber",
-    "south yorkshire":               "south_yorkshire",
-    // skip national
-    "uk":                            null,
-    "uk-wide":                       null,
-    "uk wide":                       null,
-    "national":                      null
+  // Exact map from the region heading (left of "—") to PNG basename.
+  // Skip UK/UK-wide by mapping to null.
+  const FILE_FOR = {
+    "east midlands": "east_midlands",
+    "east of england": "east_of_england",
+    "north east": "north_east",
+    "north west": "north_west",
+    "northern ireland": "northern_ireland",
+    "scotland": "scotland",
+    "south east": "south_east_incl_london",        // <- your combined chart
+    "south east (incl. london)": "south_east_incl_london",
+    "south east incl. london": "south_east_incl_london",
+    "south west": "south_west",
+    "south yorkshire": "south_yorkshire",
+    "wales": "wales",
+    "west midlands": "west_midlands",
+    "yorkshire and the humber": "yorkshire_and_the_humber",
+    "yorkshire & the humber": "yorkshire_and_the_humber",
+    // national – intentionally no images inside region sections
+    "uk": null, "uk-wide": null, "uk wide": null, "national": null
   };
 
   function cleanHeading(txt){
-    // strip emoji/symbols, keep letters/numbers/space/&/dash/colon
+    // remove emoji/symbols, keep letters/numbers/&/space/dash/colon
     let s = (txt || "").replace(/[^\p{L}\p{N}&:\- ]+/gu, " ").replace(/\s+/g," ").trim();
-    // take left of em dash or colon if present
+    // take left side of em-dash or colon
     s = s.split("—")[0].split(":")[0].trim();
     return s;
   }
 
-  function slugToBase(regionName){
-    const key = regionName.trim().toLowerCase();
-    if (key in OVERRIDES) return OVERRIDES[key]; // may be null to skip
-    return key
-      .replace(/&/g,"and")
-      .replace(/[^a-z0-9 ]+/g," ")
-      .replace(/\s+/g," ")
-      .trim()
-      .replace(/\s/g,"_");
-  }
-
-  function addRadial(section){
-    if (section.querySelector(".radial")) return;
+  function injectOne(section){
+    if (section.querySelector(".radial")) return; // already added
     const h2 = section.querySelector("h2");
     if (!h2) return;
 
-    const regionRaw = cleanHeading(h2.textContent || "");
-    const base = slugToBase(regionRaw);
-    if (!base) return; // e.g. UK-wide
+    const regionLabel = cleanHeading(h2.textContent).toLowerCase();
+    const base = FILE_FOR.hasOwnProperty(regionLabel) ? FILE_FOR[regionLabel] : null;
+    if (!base) return; // skip UK/unknowns
 
-    const src  = IMG_BASE + base + ".png";
-
+    const src = IMG_BASE + base + ".png";
     const fig = document.createElement("div");
     fig.className = "radial";
     fig.innerHTML = `
       <a href="${src}" target="_blank" rel="noopener">
-        <img src="${src}" alt="${regionRaw} radial chart"
-             onerror="this.closest('.radial').remove()" />
+        <img src="${src}" alt="${regionLabel} radial chart"
+             loading="lazy"
+             onerror="this.closest('.radial').remove()"/>
       </a>
       <small>Click to open full-resolution image</small>
     `;
+    // place right under the region title (or under the note if you prefer)
     h2.insertAdjacentElement("afterend", fig);
   }
 
-  function ready(fn){
-    if (document.readyState !== "loading") fn();
-    else document.addEventListener("DOMContentLoaded", fn);
+  function run(){
+    // Only add inside the “By Theme (Regions)” tab
+    const container = document.querySelector("#tab-themed");
+    if (!container) return;
+    container.querySelectorAll("section.region").forEach(injectOne);
   }
 
-  ready(function(){
-    // Only insert into the By Theme tab’s region sections
-    document.querySelectorAll("#tab-themed section.region").forEach(addRadial);
-
-    // If you ever use thumbnails with data-radial, wire them here
-    document.querySelectorAll('img[data-radial]').forEach(img => {
-      const base = img.getAttribute('data-radial');
-      if (base) {
-        img.src = IMG_BASE + base + ".png";
-        img.removeAttribute('data-radial');
-      }
-    });
-  });
+  if (document.readyState !== "loading") run();
+  else document.addEventListener("DOMContentLoaded", run);
 })();
 </script>
 
